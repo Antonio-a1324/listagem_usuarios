@@ -1,50 +1,129 @@
-import { createMemo, createSignal } from 'solid-js'
-import HeaderComponent from './components/HeaderComponent'
-import LoadingComponent from './components/LoadingComponent'
-import UserListComponent from './components/UserListComponent'
-import './App.css'
+import { useEffect, useState } from "react";
+import axios from "axios";
+import HeaderComponent from "./components/HeaderComponent";
+import Loading from "./components/Loading";
+import UserListComponent from "./components/UserListComponent";
+import UserDetailsComponents from "./components/UserDetailsComponents";
+import UserForm from "./components/UserForm";
+import NovoUsuarioComponent from "./components/NovoUsuarioComponent";
+import "./styles.css";
 
-function App() {
-  const [searchTerm, setSearchTerm] = createSignal('')
-  const [loading] = createSignal(false)
+const filtrarUsuariosPorTermo = (termo) => (usuario) => {
+  const termoLower = termo.trim().toLowerCase();
 
-  const users = [
-    { id: 1, name: 'Ana Carolina Silva', email: 'ana.silva@email.com', role: 'Administradora', status: 'Ativo', initials: 'AS', color: 'coral' },
-    { id: 2, name: 'Bruno Martins', email: 'bruno.martins@email.com', role: 'Editor', status: 'Ativo', initials: 'BM', color: 'blue' },
-    { id: 3, name: 'Camila Oliveira', email: 'camila.oliveira@email.com', role: 'Visualizadora', status: 'Pendente', initials: 'CO', color: 'green' },
-    { id: 4, name: 'Diego Santos', email: 'diego.santos@email.com', role: 'Editor', status: 'Ativo', initials: 'DS', color: 'orange' },
-    { id: 5, name: 'Fernanda Costa', email: 'fernanda.costa@email.com', role: 'Administradora', status: 'Inativo', initials: 'FC', color: 'purple' },
-    { id: 6, name: 'Gabriel Souza', email: 'gabriel.souza@email.com', role: 'Visualizador', status: 'Ativo', initials: 'GS', color: 'teal' },
-  ]
-
-  const normalizeText = (value) => value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-
-  const filteredUsers = createMemo(() => {
-    const term = normalizeText(searchTerm())
-    return users.filter((user) =>
-      normalizeText(`${user.name} ${user.email} ${user.role}`).includes(term),
-    )
-  })
+  if (!termoLower) return true;
 
   return (
-    <main class="app-shell">
-      <HeaderComponent userCount={users.length} searchTerm={searchTerm} onSearch={setSearchTerm} />
-      <section class="content-section">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Diretório da equipe</p>
-            <h2>Todos os usuários</h2>
+    usuario.name.toLowerCase().includes(termoLower) ||
+    usuario.email.toLowerCase().includes(termoLower) ||
+    usuario.username.toLowerCase().includes(termoLower)
+  );
+};
+
+function App() {
+  const url = "https://jsonplaceholder.typicode.com";
+  const [usuarios, setUsuarios] = useState([]);
+  const [erro, setErro] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [busca, setBusca] = useState("");
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
+  const [novoUsuario, setNovoUsuario] = useState(null);
+
+  const usuariosFiltrados = usuarios.filter(filtrarUsuariosPorTermo(busca));
+
+  async function buscaUsuario(id) {
+    try {
+      const response = await axios.get(`${url}/users/${id}`);
+      const data = response.data;
+      setUsuarioSelecionado(data);
+    } catch (error) {
+      console.log("Erro ao buscar usuário:", error);
+      setErro(`Não foi possível buscar o usuário. ${error.message}`);
+    }
+  }
+
+  async function buscaUsuarios() {
+    try {
+      setCarregando(true);
+      setErro(null);
+      const response = await axios.get(`${url}/users`);
+      setUsuarios(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error);
+      setErro(`Não foi possível buscar os usuários. ${error.message}`);
+      setUsuarios([]);
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  function limparDetalhesUsuario() {
+    setUsuarioSelecionado(null);
+  }
+
+  async function cadastrarUsuario(novoUsuario) {
+    try {
+      setErro(null);
+      const response = await axios.post(`${url}/users`, novoUsuario);
+      const data = response.data;
+      setNovoUsuario(data);
+      setUsuarios((usuariosAtuais) => [data, ...usuariosAtuais]);
+    } catch (error) {
+      console.log("Erro ao cadastrar usuário:", error);
+      setErro(`Não foi possível cadastrar o usuário. ${error.message}`);
+    }
+  }
+
+  useEffect(() => {
+    buscaUsuarios();
+  }, []);
+
+  return (
+    <div className="app-shell">
+      <div className="app-container">
+        <HeaderComponent />
+
+        <main className="content">
+          <div className="search-box">
+            <span className="search-icon">🔎</span>
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Filtrar usuários..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
           </div>
-          <span class="results-count">{filteredUsers().length} resultados</span>
-        </div>
-        {loading() ? <LoadingComponent /> : <UserListComponent users={filteredUsers()} />}
-      </section>
-    </main>
-  )
+
+          {usuarioSelecionado && (
+            <div className="details-wrapper">
+              <UserDetailsComponents usuario={usuarioSelecionado} 
+              onFecharDetalhes={limparDetalhesUsuario}/>
+            </div>
+          )}
+
+          <UserForm onCadastrar={cadastrarUsuario} />
+
+          {novoUsuario && (
+            <NovoUsuarioComponent usuario={novoUsuario} />
+          )}
+
+          <div className="summary">
+            <p>Lista atualizada</p>
+            <span className="results-chip">{usuariosFiltrados.length} resultados</span>
+          </div>
+
+          {erro && <div className="error-message">{erro}</div>}
+
+          {carregando ? (
+            <Loading />
+          ) : (
+            <UserListComponent usuarios={usuariosFiltrados} onSelecionarUsuario={buscaUsuario} />
+          )}
+        </main>
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
