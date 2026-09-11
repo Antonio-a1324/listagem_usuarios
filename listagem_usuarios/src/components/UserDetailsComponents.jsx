@@ -10,30 +10,32 @@ function UserDetailsComponents({ usuario, onFecharDetalhes }) {
         )}
       </div>
 
-      <p>
-        <strong>Nome: </strong>
-        {usuario.name}
-      </p>
+      <div className="details-grid">
+        <div className="detail-item">
+          <span className="detail-label">Nome</span>
+          <strong>{usuario.name}</strong>
+        </div>
 
-      <p>
-        <strong>Email: </strong>
-        {usuario.email}
-      </p>
+        <div className="detail-item">
+          <span className="detail-label">Email</span>
+          <strong>{usuario.email}</strong>
+        </div>
 
-      <p>
-        <strong>Cidade: </strong>
-        {usuario.address?.city || "Não informado"}
-      </p>
+        <div className="detail-item">
+          <span className="detail-label">Cidade</span>
+          <strong>{usuario.address?.city || "Não informado"}</strong>
+        </div>
 
-      <p>
-        <strong>Telefone: </strong>
-        {usuario.phone || "Não informado"}
-      </p>
+        <div className="detail-item">
+          <span className="detail-label">Telefone</span>
+          <strong>{usuario.phone || "Não informado"}</strong>
+        </div>
 
-      <p>
-        <strong>Website: </strong>
-        {usuario.website || "Não informado"}
-      </p>
+        <div className="detail-item">
+          <span className="detail-label">Website</span>
+          <strong>{usuario.website || "Não informado"}</strong>
+        </div>
+      </div>
     </section>
   );
 }

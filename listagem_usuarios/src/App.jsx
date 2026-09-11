@@ -6,6 +6,9 @@ import UserListComponent from "./components/UserListComponent";
 import UserDetailsComponents from "./components/UserDetailsComponents";
 import UserForm from "./components/UserForm";
 import NovoUsuarioComponent from "./components/NovoUsuarioComponent";
+import MensagemSucesso from "./components/MensagemSucesso";
+import MensagemErro from "./components/MensagemErro";
+import Modal from "./components/Modal";
 import "./styles.css";
 
 const filtrarUsuariosPorTermo = (termo) => (usuario) => {
@@ -28,6 +31,8 @@ function App() {
   const [busca, setBusca] = useState("");
   const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
   const [novoUsuario, setNovoUsuario] = useState(null);
+  const [modalAberta, setModalAberta] = useState(false);
+  const [mensagemStatus, setMensagemStatus] = useState({ tipo: "", texto: "" });
 
   const usuariosFiltrados = usuarios.filter(filtrarUsuariosPorTermo(busca));
 
@@ -36,9 +41,12 @@ function App() {
       const response = await axios.get(`${url}/users/${id}`);
       const data = response.data;
       setUsuarioSelecionado(data);
+      setModalAberta(true);
+      setErro(null);
     } catch (error) {
       console.log("Erro ao buscar usuário:", error);
       setErro(`Não foi possível buscar o usuário. ${error.message}`);
+      setMensagemStatus({ tipo: "erro", texto: `Não foi possível buscar o usuário. ${error.message}` });
     }
   }
 
@@ -46,11 +54,13 @@ function App() {
     try {
       setCarregando(true);
       setErro(null);
+      setMensagemStatus({ tipo: "", texto: "" });
       const response = await axios.get(`${url}/users`);
       setUsuarios(response.data);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       setErro(`Não foi possível buscar os usuários. ${error.message}`);
+      setMensagemStatus({ tipo: "erro", texto: `Não foi possível buscar os usuários. ${error.message}` });
       setUsuarios([]);
     } finally {
       setCarregando(false);
@@ -59,18 +69,22 @@ function App() {
 
   function limparDetalhesUsuario() {
     setUsuarioSelecionado(null);
+    setModalAberta(false);
   }
 
   async function cadastrarUsuario(novoUsuario) {
     try {
       setErro(null);
+      setMensagemStatus({ tipo: "", texto: "" });
       const response = await axios.post(`${url}/users`, novoUsuario);
       const data = response.data;
       setNovoUsuario(data);
       setUsuarios((usuariosAtuais) => [data, ...usuariosAtuais]);
+      setMensagemStatus({ tipo: "sucesso", texto: `Usuário "${data.name}" cadastrado com sucesso!` });
     } catch (error) {
       console.log("Erro ao cadastrar usuário:", error);
       setErro(`Não foi possível cadastrar o usuário. ${error.message}`);
+      setMensagemStatus({ tipo: "erro", texto: `Não foi possível cadastrar o usuário. ${error.message}` });
     }
   }
 
@@ -95,14 +109,15 @@ function App() {
             />
           </div>
 
-          {usuarioSelecionado && (
-            <div className="details-wrapper">
-              <UserDetailsComponents usuario={usuarioSelecionado} 
-              onFecharDetalhes={limparDetalhesUsuario}/>
-            </div>
+          <UserForm onCadastrar={cadastrarUsuario} />
+
+          {mensagemStatus.tipo === "sucesso" && (
+            <MensagemSucesso mensagem={mensagemStatus.texto} />
           )}
 
-          <UserForm onCadastrar={cadastrarUsuario} />
+          {mensagemStatus.tipo === "erro" && (
+            <MensagemErro mensagem={mensagemStatus.texto} />
+          )}
 
           {novoUsuario && (
             <NovoUsuarioComponent usuario={novoUsuario} />
@@ -122,6 +137,12 @@ function App() {
           )}
         </main>
       </div>
+
+      <Modal isOpen={modalAberta} onClose={limparDetalhesUsuario}>
+        {usuarioSelecionado && (
+          <UserDetailsComponents usuario={usuarioSelecionado} onFecharDetalhes={limparDetalhesUsuario} />
+        )}
+      </Modal>
     </div>
   );
 }

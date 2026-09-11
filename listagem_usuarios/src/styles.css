@@ -222,14 +222,45 @@ img {
   font-weight: 700;
 }
 
-.error-message {
-  margin-bottom: 18px;
+.status-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 14px 16px;
-  border: 1px solid rgba(200, 60, 60, 0.14);
+  margin-bottom: 18px;
   border-radius: 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-weight: 800;
+}
+
+.success-message {
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: rgba(27, 163, 106, 0.2);
+}
+
+.success-message .status-icon {
+  background: rgba(27, 163, 106, 0.12);
+}
+
+.error-message {
   background: var(--danger-bg);
   color: var(--danger);
-  font-weight: 600;
+  border-color: rgba(200, 60, 60, 0.15);
+}
+
+.error-message .status-icon {
+  background: rgba(200, 60, 60, 0.1);
 }
 
 .details-wrapper {
@@ -259,10 +290,32 @@ img {
   color: var(--secondary);
 }
 
-.details-card p,
-.success-card p {
-  margin: 10px 0;
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f7f9ff;
+  border: 1px solid #e1e9ff;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--muted);
+}
+
+.detail-item strong {
+  color: var(--secondary);
 }
 
 .close-button {
@@ -272,6 +325,42 @@ img {
   padding: 8px 12px;
   border-radius: 10px;
   font-weight: 600;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 17, 31, 0.66);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal-content {
+  position: relative;
+  width: min(640px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 22px;
+  padding: 26px 22px;
+  box-shadow: 0 28px 60px rgba(14, 24, 46, 0.28);
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #eef3ff;
+  color: var(--secondary);
+  font-size: 1.6rem;
+  line-height: 1;
 }
 
 .loading-wrap {
