@@ -1,6 +1,6 @@
 import UserCard from "./UserCard";
 
-function UserListComponent({ usuarios, onSelecionarUsuario }) {
+function UserListComponent({ usuarios, onSelecionarUsuario, onRemoverUsuario }) {
   return (
     <section className="user-list-section">
       <p className="results-count">Usuários encontrados: {usuarios.length}</p>
@@ -8,7 +8,12 @@ function UserListComponent({ usuarios, onSelecionarUsuario }) {
       {usuarios.length > 0 ? (
         <div className="user-list">
           {usuarios.map((usuario) => (
-            <UserCard key={usuario.id} usuario={usuario} onSelecionarUsuario={onSelecionarUsuario} />
+            <UserCard
+              key={usuario.id}
+              usuario={usuario}
+              onSelecionarUsuario={onSelecionarUsuario}
+              onRemoverUsuario={onRemoverUsuario}
+            />
           ))}
         </div>
       ) : (

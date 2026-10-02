@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import HeaderComponent from "./components/HeaderComponent";
-import Loading from "./components/Loading";
 import UserListComponent from "./components/UserListComponent";
 import UserDetailsComponents from "./components/UserDetailsComponents";
 import UserForm from "./components/UserForm";
-import NovoUsuarioComponent from "./components/NovoUsuarioComponent";
 import MensagemSucesso from "./components/MensagemSucesso";
 import MensagemErro from "./components/MensagemErro";
 import Modal from "./components/Modal";
@@ -26,71 +24,51 @@ const filtrarUsuariosPorTermo = (termo) => (usuario) => {
 function App() {
   const url = "https://jsonplaceholder.typicode.com";
   const [usuarios, setUsuarios] = useState([]);
-  const [erro, setErro] = useState(null);
-  const [carregando, setCarregando] = useState(true);
   const [busca, setBusca] = useState("");
   const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
-  const [novoUsuario, setNovoUsuario] = useState(null);
   const [modalAberta, setModalAberta] = useState(false);
+  const [formularioAberto, setFormularioAberto] = useState(false);
   const [mensagemStatus, setMensagemStatus] = useState({ tipo: "", texto: "" });
 
   const usuariosFiltrados = usuarios.filter(filtrarUsuariosPorTermo(busca));
 
-  async function buscaUsuario(id) {
-    try {
-      const response = await axios.get(`${url}/users/${id}`);
-      const data = response.data;
-      setUsuarioSelecionado(data);
-      setModalAberta(true);
-      setErro(null);
-    } catch (error) {
-      console.log("Erro ao buscar usuário:", error);
-      setErro(`Não foi possível buscar o usuário. ${error.message}`);
-      setMensagemStatus({ tipo: "erro", texto: `Não foi possível buscar o usuário. ${error.message}` });
-    }
-  }
+  function buscaUsuario(id) {
+    const usuario = usuarios.find((usuarioAtual) => usuarioAtual.id === id);
+    if (!usuario) return;
 
-  async function buscaUsuarios() {
-    try {
-      setCarregando(true);
-      setErro(null);
-      setMensagemStatus({ tipo: "", texto: "" });
-      const response = await axios.get(`${url}/users`);
-      setUsuarios(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar usuários:", error);
-      setErro(`Não foi possível buscar os usuários. ${error.message}`);
-      setMensagemStatus({ tipo: "erro", texto: `Não foi possível buscar os usuários. ${error.message}` });
-      setUsuarios([]);
-    } finally {
-      setCarregando(false);
-    }
+    setUsuarioSelecionado(usuario);
+    setFormularioAberto(false);
+    setModalAberta(true);
+    setMensagemStatus({ tipo: "", texto: "" });
   }
 
   function limparDetalhesUsuario() {
     setUsuarioSelecionado(null);
     setModalAberta(false);
+    setFormularioAberto(false);
+  }
+
+  function removerUsuario(id) {
+    setUsuarios((usuariosAtuais) => usuariosAtuais.filter((usuario) => usuario.id !== id));
   }
 
   async function cadastrarUsuario(novoUsuario) {
     try {
-      setErro(null);
       setMensagemStatus({ tipo: "", texto: "" });
       const response = await axios.post(`${url}/users`, novoUsuario);
       const data = response.data;
-      setNovoUsuario(data);
       setUsuarios((usuariosAtuais) => [data, ...usuariosAtuais]);
+      setUsuarioSelecionado(data);
+      setFormularioAberto(false);
+      setModalAberta(true);
       setMensagemStatus({ tipo: "sucesso", texto: `Usuário "${data.name}" cadastrado com sucesso!` });
+      return true;
     } catch (error) {
       console.log("Erro ao cadastrar usuário:", error);
-      setErro(`Não foi possível cadastrar o usuário. ${error.message}`);
       setMensagemStatus({ tipo: "erro", texto: `Não foi possível cadastrar o usuário. ${error.message}` });
+      return false;
     }
   }
-
-  useEffect(() => {
-    buscaUsuarios();
-  }, []);
 
   return (
     <div className="app-shell">
@@ -109,39 +87,52 @@ function App() {
             />
           </div>
 
-          <UserForm onCadastrar={cadastrarUsuario} />
+          <button
+            type="button"
+            className="primary-button form-button"
+            onClick={() => setFormularioAberto(true)}
+          >
+            Cadastrar usuário
+          </button>
 
-          {mensagemStatus.tipo === "sucesso" && (
-            <MensagemSucesso mensagem={mensagemStatus.texto} />
-          )}
-
-          {mensagemStatus.tipo === "erro" && (
-            <MensagemErro mensagem={mensagemStatus.texto} />
-          )}
-
-          {novoUsuario && (
-            <NovoUsuarioComponent usuario={novoUsuario} />
+          {mensagemStatus.texto && (
+            <div className="notification-viewport" aria-live="polite">
+              {mensagemStatus.tipo === "sucesso" ? (
+                <MensagemSucesso
+                  mensagem={mensagemStatus.texto}
+                  onDismiss={() => setMensagemStatus({ tipo: "", texto: "" })}
+                />
+              ) : (
+                <MensagemErro
+                  mensagem={mensagemStatus.texto}
+                  onDismiss={() => setMensagemStatus({ tipo: "", texto: "" })}
+                />
+              )}
+            </div>
           )}
 
           <div className="summary">
-            <p>Lista atualizada</p>
+            <p>Usuários cadastrados: {usuarios.length}</p>
             <span className="results-chip">{usuariosFiltrados.length} resultados</span>
           </div>
 
-          {erro && <div className="error-message">{erro}</div>}
-
-          {carregando ? (
-            <Loading />
-          ) : (
-            <UserListComponent usuarios={usuariosFiltrados} onSelecionarUsuario={buscaUsuario} />
-          )}
+          <UserListComponent
+            usuarios={usuariosFiltrados}
+            onSelecionarUsuario={buscaUsuario}
+            onRemoverUsuario={removerUsuario}
+          />
         </main>
       </div>
 
-      <Modal isOpen={modalAberta} onClose={limparDetalhesUsuario}>
-        {usuarioSelecionado && (
+      <Modal isOpen={modalAberta || formularioAberto} onClose={limparDetalhesUsuario}>
+        {formularioAberto ? (
+          <section>
+            <h2>Novo usuário</h2>
+            <UserForm onCadastrar={cadastrarUsuario} />
+          </section>
+        ) : usuarioSelecionado ? (
           <UserDetailsComponents usuario={usuarioSelecionado} onFecharDetalhes={limparDetalhesUsuario} />
-        )}
+        ) : null}
       </Modal>
     </div>
   );

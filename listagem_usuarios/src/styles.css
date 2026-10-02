@@ -233,6 +233,38 @@ img {
   border: 1px solid transparent;
 }
 
+.notification-viewport {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1100;
+  width: min(440px, calc(100vw - 40px));
+  pointer-events: none;
+}
+
+.notification-viewport .status-message {
+  margin: 0;
+  box-shadow: 0 16px 40px rgba(32, 57, 110, 0.2);
+  pointer-events: auto;
+}
+
+.notification-close {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: currentColor;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.notification-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
 .status-icon {
   display: inline-flex;
   align-items: center;
@@ -483,6 +515,21 @@ img {
   background: var(--primary-soft);
   color: var(--primary-dark);
   font-weight: 700;
+}
+
+.remove-button {
+  display: block;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(200, 60, 60, 0.2);
+  border-radius: 10px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.remove-button:hover {
+  background: #ffe4e4;
 }
 
 .muted {

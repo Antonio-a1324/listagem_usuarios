@@ -1,4 +1,4 @@
-function UserCard({ usuario, onSelecionarUsuario }) {
+function UserCard({ usuario, onSelecionarUsuario, onRemoverUsuario }) {
   return (
     <article className="user-card">
       <div className="avatar" aria-label={`Avatar de ${usuario.name}`}>
@@ -22,6 +22,14 @@ function UserCard({ usuario, onSelecionarUsuario }) {
         ) : (
           <p className="user-website muted">Website não informado</p>
         )}
+        <button
+          type="button"
+          className="remove-button"
+          onClick={() => onRemoverUsuario(usuario.id)}
+          aria-label={`Remover ${usuario.name}`}
+        >
+          Remover usuário
+        </button>
       </div>
     </article>
   );
